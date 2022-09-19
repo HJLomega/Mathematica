@@ -1,0 +1,39 @@
+epsilon[i_, j_, k_] = 0;
+epsilon[1, 2, 3] = epsilon[2, 3, 1] = epsilon[3, 1, 2] = 1;
+epsilon[1, 3, 2] = epsilon[2, 1, 3] = epsilon[3, 2, 1] = -1;
+
+testEquationQ[fList_, vList_] := 
+ Fold[#1 + #2 &, #] &@
+  Flatten@Table[
+    epsilon[i, j, k]* fList[[k]]*D[fList[[j]], vList[[i]]], {i, 
+     3}, {j, 3}, {k, 3}]
+
+diff3[i_, j_, k_] := i != k && i != j && j != k;
+An3[n_] := 
+ Select[#, diff3 @@ # &] &@
+  Flatten[Table[{i, j, k}, {i, n}, {j, n}, {k, n}], 2]
+
+iLine[i_, matrix_, vector_] := 
+ testEquationQ @@ {{matrix[[i, #1]], matrix[[i, #2]], 
+      matrix[[i, #3]]}, {vector[[#1]], vector[[#2]], 
+      vector[[#3]]}} & @@@ An3[Length[matrix[[1]]]]
+
+ItegrableTestQ[matrix_, vector_] :=
+ Fold[#1 && #2 === 0 &, True, #] &@
+  Flatten@Module[{m = Length[matrix], n = Length[matrix[[1]]]},
+    	Table[ iLine[i, matrix, vector], {i, m}]]
+
+Module[{
+  matrix = {{1, 0, 0, -r*Cos[o]}, {0, 1, 0, -r*Sin[o]}},
+  vector = {x, y, o, fi}},
+ ItegrableTestQ[matrix, vector]]
+ 
+False
+
+(*为什么是f@@而不是f@@@？？？*)
+Module[{
+  matrix = {{1, 0, 0, -r*Cos[o]}, {0, 1, 0, -r*Sin[o]}},
+  vector = {x, y, o, fi}},
+ f @@ {{matrix[[1, #1]], matrix[[1, #2]], 
+      matrix[[1, #3]]}, {vector[[#1]], vector[[#2]], 
+      vector[[#3]]}} & @@@ An3[4]]
